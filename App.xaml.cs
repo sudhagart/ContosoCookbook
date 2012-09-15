@@ -15,6 +15,7 @@ using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
+using ContosoCookbook.Data;
 
 // The Grid App template is documented at http://go.microsoft.com/fwlink/?LinkId=234226
 
@@ -68,6 +69,9 @@ namespace ContosoCookbook
                         //Assume there is no state and continue
                     }
                 }
+
+                // Load Recipes Async
+                await RecipeDataSource.LoadLocalDataAsync();
 
                 // Place the frame in the current Window
                 Window.Current.Content = rootFrame;

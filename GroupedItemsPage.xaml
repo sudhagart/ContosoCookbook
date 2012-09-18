@@ -37,7 +37,7 @@
         </Grid.RowDefinitions>
 
         <!-- Horizontal scrolling grid used in most view states -->
-        <GridView
+        <!--<GridView
             x:Name="itemGridView"
             AutomationProperties.AutomationId="ItemGridView"
             AutomationProperties.Name="Grouped Items"
@@ -79,7 +79,65 @@
                     </GroupStyle.Panel>
                 </GroupStyle>
             </GridView.GroupStyle>
-        </GridView>
+        </GridView>-->
+
+        <SemanticZoom Grid.Row="1">
+            <SemanticZoom.ZoomedInView>
+                <!-- Horizontal scrolling grid used in most view states -->
+                <GridView
+            x:Name="itemGridView"
+            AutomationProperties.AutomationId="ItemGridView"
+            AutomationProperties.Name="Grouped Items"
+            Margin="0,-3,0,0"
+            Padding="116,0,40,46"
+            ItemsSource="{Binding Source={StaticResource groupedItemsViewSource}}"
+            ItemTemplate="{StaticResource Standard250x250ItemTemplate}"
+            SelectionMode="None"
+            IsItemClickEnabled="True"
+            ItemClick="ItemView_ItemClick">
+
+                    <GridView.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <VirtualizingStackPanel Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </GridView.ItemsPanel>
+                    <GridView.GroupStyle>
+                        <GroupStyle>
+                            <GroupStyle.HeaderTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="1,0,0,6">
+                                        <Button
+                            AutomationProperties.Name="Group Title"
+                            Content="{Binding Title}"
+                            Click="Header_Click"
+                            Style="{StaticResource TextButtonStyle}"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </GroupStyle.HeaderTemplate>
+                            <GroupStyle.Panel>
+                                <ItemsPanelTemplate>
+                                    <VariableSizedWrapGrid Orientation="Vertical" Margin="0,0,80,0"/>
+                                </ItemsPanelTemplate>
+                            </GroupStyle.Panel>
+                        </GroupStyle>
+                    </GridView.GroupStyle>
+                </GridView>
+            </SemanticZoom.ZoomedInView>
+            <SemanticZoom.ZoomedOutView>
+                <GridView x:Name="groupGridView" Margin="116,0,40,46">
+                    <GridView.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="0,0,24,0">
+                                <Image Source="{Binding Group.GroupImage}" Width="250" Height="500" Stretch="UniformToFill" />
+                                <TextBlock Text="{Binding Group.Title}" Foreground="{StaticResource ListViewItemOverlayForegroundThemeBrush}" Style="{StaticResource TitleTextStyle}" FontSize="28" Margin="12"/>
+                                <TextBlock Text="{Binding Group.RecipesCount}" Foreground="{StaticResource ApplicationSecondaryForegroundThemeBrush}" Style="{StaticResource TitleTextStyle}" FontSize="96" Margin="12,64,12,12" HorizontalAlignment="Right"/>
+                            </Grid>
+                        </DataTemplate>
+                    </GridView.ItemTemplate>
+                </GridView>
+            </SemanticZoom.ZoomedOutView>
+        </SemanticZoom>
+
 
         <!-- Vertical scrolling list only used when snapped -->
         <ListView
@@ -165,6 +223,9 @@
                             <DiscreteObjectKeyFrame KeyTime="0" Value="Visible"/>
                         </ObjectAnimationUsingKeyFrames>
                         <ObjectAnimationUsingKeyFrames Storyboard.TargetName="itemGridView" Storyboard.TargetProperty="Visibility">
+                            <DiscreteObjectKeyFrame KeyTime="0" Value="Collapsed"/>
+                        </ObjectAnimationUsingKeyFrames>
+                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="groupGridView" Storyboard.TargetProperty="Visibility">
                             <DiscreteObjectKeyFrame KeyTime="0" Value="Collapsed"/>
                         </ObjectAnimationUsingKeyFrames>
                     </Storyboard>

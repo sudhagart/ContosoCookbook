@@ -1697,18 +1697,23 @@
         List-appropriate 80 pixel high item template as seen in the SplitPage when Filled, and
         the following pages when snapped: GroupedItemsPage, GroupDetailPage, and ItemsPage
     -->
+
     <DataTemplate x:Key="Standard80ItemTemplate">
         <Grid Margin="6">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            <Border Background="{StaticResource ListViewItemPlaceholderBackgroundThemeBrush}" Width="60" Height="60">
+            <Border Background="{StaticResource ListViewItemPlaceholderBackgroundThemeBrush}" Width="80">
                 <Image Source="{Binding Image}" Stretch="UniformToFill"/>
             </Border>
             <StackPanel Grid.Column="1" Margin="10,0,0,0">
-                <TextBlock Text="{Binding Title}" Style="{StaticResource ItemTextStyle}" MaxHeight="40"/>
-                <TextBlock Text="{Binding Subtitle}" Style="{StaticResource CaptionTextStyle}" TextWrapping="NoWrap"/>
+                <TextBlock Text="{Binding ShortTitle}" Style="{StaticResource ItemTextStyle}" MaxHeight="40"/>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Preparation time:" Style="{StaticResource CaptionTextStyle}" />
+                    <TextBlock Text="{Binding PrepTime}" Style="{StaticResource CaptionTextStyle}" Margin="4,0,4,0" />
+                    <TextBlock Text="minutes" Style="{StaticResource CaptionTextStyle}" />
+                </StackPanel>
             </StackPanel>
         </Grid>
     </DataTemplate>

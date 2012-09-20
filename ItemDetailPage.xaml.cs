@@ -15,7 +15,11 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 using System.Text;
 using Windows.ApplicationModel.DataTransfer;
+using Windows.Storage;
+using Windows.Media.Capture;
 using Windows.Storage.Streams;
+using Callisto.Controls;
+
 
 // The Item Detail Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=234232
 
@@ -27,6 +31,10 @@ namespace ContosoCookbook
     /// </summary>
     public sealed partial class ItemDetailPage : ContosoCookbook.Common.LayoutAwarePage
     {
+
+        private StorageFile _photo; // Photo file to share
+        private StorageFile _video; // Video file to share
+
         public ItemDetailPage()
         {
             this.InitializeComponent();
@@ -80,18 +88,84 @@ namespace ContosoCookbook
             var request = args.Request;
             var item = (RecipeDataItem)this.flipView.SelectedItem;
             request.Data.Properties.Title = item.Title;
-            request.Data.Properties.Description = "Recipe ingredients and directions";
 
-            // Share recipe text
-            var recipe = String.Join(item.ImagePath.OriginalString,"\r\nINGREDIENTS\r\n");
-            recipe += String.Join("\r\n", item.Ingredients);
-            recipe += ("\r\n\r\nDIRECTIONS\r\n" + item.Directions);
-            request.Data.SetText(recipe);
+            if (_photo != null)
+            {
+                request.Data.Properties.Description = "Recipe photo";
+                var reference = Windows.Storage.Streams.RandomAccessStreamReference.CreateFromFile(_photo);
+                request.Data.Properties.Thumbnail = reference;
+                request.Data.SetBitmap(reference);
+                _photo = null;
+            }
+            else if (_video != null)
+            {
+                request.Data.Properties.Description = "Recipe video";
+                List<StorageFile> items = new List<StorageFile>();
+                items.Add(_video);
+                request.Data.SetStorageItems(items);
+                _video = null;
+            }
+            else
+            {
+                request.Data.Properties.Description = "Recipe ingredients and directions";
 
-            // Share recipe image
-            var reference = RandomAccessStreamReference.CreateFromUri(new Uri(item.ImagePath.AbsoluteUri));
-            request.Data.Properties.Thumbnail = reference;
-            request.Data.SetBitmap(reference);
+                // Share recipe text
+                var recipe = "\r\nINGREDIENTS\r\n";
+                recipe += String.Join("\r\n", item.Ingredients);
+                recipe += ("\r\n\r\nDIRECTIONS\r\n" + item.Directions);
+                request.Data.SetText(recipe);
+
+                // Share recipe image
+                var reference = RandomAccessStreamReference.CreateFromUri(new Uri(item.ImagePath.AbsoluteUri));
+                request.Data.Properties.Thumbnail = reference;
+                request.Data.SetBitmap(reference);
+            }
+        }
+
+        private void OnBragButtonClicked(object sender, RoutedEventArgs e)
+        {
+            // Create a menu containing two items
+            var menu = new Menu();
+            var item1 = new MenuItem { Text = "Photo" };
+            item1.Tapped += OnCapturePhoto;
+            menu.Items.Add(item1);
+            var item2 = new MenuItem { Text = "Video" };
+            item2.Tapped += OnCaptureVideo;
+            menu.Items.Add(item2);
+
+            // Show the menu in a Flyout anchored to the Brag button
+            var flyout = new Flyout();
+            flyout.Placement = PlacementMode.Top;
+            flyout.HorizontalAlignment = HorizontalAlignment.Left;
+            flyout.HorizontalContentAlignment = HorizontalAlignment.Left;
+            flyout.PlacementTarget = BragButton;
+            flyout.Content = menu;
+            flyout.IsOpen = true;
+        }
+
+        private async void OnCapturePhoto(object sender, TappedRoutedEventArgs e)
+        {
+            var camera = new CameraCaptureUI();
+            var file = await camera.CaptureFileAsync(CameraCaptureUIMode.Photo);
+
+            if (file != null)
+            {
+                _photo = file;
+                DataTransferManager.ShowShareUI();
+            }
+        }
+
+        private async void OnCaptureVideo(object sender, TappedRoutedEventArgs e)
+        {
+            var camera = new CameraCaptureUI();
+            camera.VideoSettings.Format = CameraCaptureUIVideoFormat.Wmv;
+            var file = await camera.CaptureFileAsync(CameraCaptureUIMode.Video);
+
+            if (file != null)
+            {
+                _video = file;
+                DataTransferManager.ShowShareUI();
+            }
         }
 
     }

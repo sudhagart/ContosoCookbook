@@ -13,6 +13,9 @@ using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
+using System.Text;
+using Windows.ApplicationModel.DataTransfer;
+using Windows.Storage.Streams;
 
 // The Item Detail Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=234232
 
@@ -51,6 +54,9 @@ namespace ContosoCookbook
             this.DefaultViewModel["Group"] = item.Group;
             this.DefaultViewModel["Items"] = item.Group.Items;
             this.flipView.SelectedItem = item;
+
+            // Register for DataRequested events
+            DataTransferManager.GetForCurrentView().DataRequested += OnDataRequested;
         }
 
         /// <summary>
@@ -63,6 +69,30 @@ namespace ContosoCookbook
         {
             var selectedItem = (RecipeDataItem)this.flipView.SelectedItem;
             pageState["SelectedItem"] = selectedItem.UniqueId;
+
+            // Deregister the DataRequested event handler
+            DataTransferManager.GetForCurrentView().DataRequested -= OnDataRequested;
+
         }
+
+        void OnDataRequested(DataTransferManager sender, DataRequestedEventArgs args)
+        {
+            var request = args.Request;
+            var item = (RecipeDataItem)this.flipView.SelectedItem;
+            request.Data.Properties.Title = item.Title;
+            request.Data.Properties.Description = "Recipe ingredients and directions";
+
+            // Share recipe text
+            var recipe = String.Join(item.ImagePath.OriginalString,"\r\nINGREDIENTS\r\n");
+            recipe += String.Join("\r\n", item.Ingredients);
+            recipe += ("\r\n\r\nDIRECTIONS\r\n" + item.Directions);
+            request.Data.SetText(recipe);
+
+            // Share recipe image
+            var reference = RandomAccessStreamReference.CreateFromUri(new Uri(item.ImagePath.AbsoluteUri));
+            request.Data.Properties.Thumbnail = reference;
+            request.Data.SetBitmap(reference);
+        }
+
     }
 }

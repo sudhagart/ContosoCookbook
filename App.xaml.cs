@@ -17,6 +17,10 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 using ContosoCookbook.Data;
 using Windows.ApplicationModel.Search;
+using Windows.UI;
+using Windows.UI.ApplicationSettings;
+using Callisto.Controls;
+using Windows.Storage;
 
 // The Grid App template is documented at http://go.microsoft.com/fwlink/?LinkId=234226
 
@@ -27,6 +31,8 @@ namespace ContosoCookbook
     /// </summary>
     sealed partial class App : Application
     {
+        private Color _background = Color.FromArgb(255, 0, 77, 96);
+
         /// <summary>
         /// Initializes the singleton Application object.  This is the first line of authored code
         /// executed, and as such is the logical equivalent of main() or WinMain().
@@ -56,6 +62,27 @@ namespace ContosoCookbook
                 rootFrame = new Frame();
                 //Associate the frame with a SuspensionManager key                                
                 SuspensionManager.RegisterFrame(rootFrame, "AppFrame");
+                
+                // Load Recipes Async
+                await RecipeDataSource.LoadLocalDataAsync();
+
+                // If the app was closed by the user the last time it ran, and if "Remember
+                // "where I was" is enabled, restore the navigation state
+                if (args.PreviousExecutionState == ApplicationExecutionState.ClosedByUser)
+                {
+                    if (ApplicationData.Current.RoamingSettings.Values.ContainsKey("Remember"))
+                    {
+                        bool remember = (bool)ApplicationData.Current.RoamingSettings.Values["Remember"];
+                        if (remember)
+                            await SuspensionManager.RestoreAsync();
+                    }
+                }
+
+                // Register handler for SuggestionsRequested events from the search pane
+                SearchPane.GetForCurrentView().SuggestionsRequested += OnSuggestionsRequested;
+
+                // Register handler for CommandsRequested events from the settings pane
+                SettingsPane.GetForCurrentView().CommandsRequested += OnCommandsRequested;
 
                 if (args.PreviousExecutionState == ApplicationExecutionState.Terminated)
                 {
@@ -71,11 +98,7 @@ namespace ContosoCookbook
                     }
                 }
 
-                // Load Recipes Async
-                await RecipeDataSource.LoadLocalDataAsync();
-
-                // Register handler for SuggestionsRequested events from the search pane
-                SearchPane.GetForCurrentView().SuggestionsRequested += OnSuggestionsRequested;
+                
 
                 // Place the frame in the current Window
                 Window.Current.Content = rootFrame;
@@ -140,6 +163,8 @@ namespace ContosoCookbook
                 // Register handler for SuggestionsRequested events from the search pane
                 SearchPane.GetForCurrentView().SuggestionsRequested += OnSuggestionsRequested;
 
+                // Register handler for CommandsRequested events from the settings pane
+                SettingsPane.GetForCurrentView().CommandsRequested += OnCommandsRequested;
 
             }
 
@@ -178,5 +203,35 @@ namespace ContosoCookbook
             // Ensure the current window is active
             Window.Current.Activate();
         }
+
+        void OnCommandsRequested(SettingsPane sender, SettingsPaneCommandsRequestedEventArgs args)
+        {
+            // Add an About command
+            var about = new SettingsCommand("about", "About", (handler) =>
+            {
+                var settings = new SettingsFlyout();
+                settings.Content = new AboutUserControl();
+                settings.HeaderBrush = new SolidColorBrush(_background);
+                settings.Background = new SolidColorBrush(_background);
+                settings.HeaderText = "About";
+                settings.IsOpen = true;
+            });
+
+            args.Request.ApplicationCommands.Add(about);
+
+            // Add an Preferences command
+            var preferences = new SettingsCommand("preferences", "Preferences", (handler) =>
+            {
+                var settings = new SettingsFlyout();
+                settings.Content = new PreferencesUserControl();
+                settings.HeaderBrush = new SolidColorBrush(_background);
+                settings.Background = new SolidColorBrush(_background);
+                settings.HeaderText = "Preferences";
+                settings.IsOpen = true;
+            });
+
+            args.Request.ApplicationCommands.Add(preferences);
+        }
+
     }
 }
